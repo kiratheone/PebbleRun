@@ -34,12 +34,14 @@ data class WorkoutSession(
      * Supports requirement for session state transition validation
      */
     fun canTransitionTo(newStatus: WorkoutStatus): Boolean {
-        return when (status) {
-            WorkoutStatus.PENDING -> newStatus == WorkoutStatus.ACTIVE
-            WorkoutStatus.ACTIVE -> newStatus == WorkoutStatus.PAUSED || newStatus == WorkoutStatus.COMPLETED
-            WorkoutStatus.PAUSED -> newStatus == WorkoutStatus.ACTIVE || newStatus == WorkoutStatus.COMPLETED
-            WorkoutStatus.COMPLETED -> false // No transitions from completed
-        }
+        return WorkoutSessionValidator.canTransitionTo(status, newStatus, this).isValid
+    }
+    
+    /**
+     * Gets detailed validation result for state transition
+     */
+    fun validateTransitionTo(newStatus: WorkoutStatus): ValidationResult {
+        return WorkoutSessionValidator.canTransitionTo(status, newStatus, this)
     }
     
     /**
@@ -53,10 +55,50 @@ data class WorkoutSession(
             WorkoutStatus.COMPLETED -> copy(
                 status = newStatus,
                 endTime = timestamp,
-                totalDuration = if (endTime != null) endTime.epochSeconds - startTime.epochSeconds else 0
+                totalDuration = timestamp.epochSeconds - startTime.epochSeconds
             )
             else -> copy(status = newStatus)
         }
+    }
+    
+    /**
+     * Updates workout session with new HR sample and recalculates statistics
+     * Supports REQ-001 (Real-time HR data collection)
+     */
+    fun withNewHRSample(hrSample: HRSample): WorkoutSession {
+        val updatedSamples = hrSamples + hrSample
+        val validHRValues = updatedSamples.map { it.heartRate }.filter { it > 0 }
+        
+        return copy(
+            hrSamples = updatedSamples,
+            averageHeartRate = if (validHRValues.isNotEmpty()) validHRValues.average().toInt() else 0,
+            maxHeartRate = validHRValues.maxOrNull() ?: 0,
+            minHeartRate = validHRValues.minOrNull() ?: 0
+        )
+    }
+    
+    /**
+     * Updates workout session with new GPS point and recalculates pace/distance
+     * Supports REQ-002 (GPS-based pace and distance calculation)
+     */
+    fun withNewGeoPoint(geoPoint: GeoPoint, newPace: Double, newDistance: Double): WorkoutSession {
+        return copy(
+            geoPoints = geoPoints + geoPoint,
+            totalDistance = newDistance,
+            averagePace = newPace
+        )
+    }
+    
+    /**
+     * Updates session duration for real-time display
+     * Supports REQ-006 (Real-time data synchronization)
+     */
+    fun withUpdatedDuration(currentTime: Instant): WorkoutSession {
+        val duration = if (status == WorkoutStatus.ACTIVE) {
+            currentTime.epochSeconds - startTime.epochSeconds
+        } else totalDuration
+        
+        return copy(totalDuration = duration)
     }
 }
 
