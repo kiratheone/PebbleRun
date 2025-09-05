@@ -18,7 +18,17 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.shared.domain)
+            implementation(projects.shared.proto)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
+        }
+        androidMain.dependencies {
+            // PebbleKit will need to be added as a local AAR or through alternative means
+            // implementation("com.getpebble:pebblekit-android:4.0.1") // Placeholder
+        }
+        iosMain.dependencies {
+            // PebbleKit iOS framework will need to be added through CocoaPods or manual integration
+            // The framework should be available in the iOS project
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

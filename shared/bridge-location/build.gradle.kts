@@ -19,6 +19,14 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.shared.domain)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
+        }
+        androidMain.dependencies {
+            // Google Play Services Location for FusedLocationProviderClient
+            implementation("com.google.android.gms:play-services-location:21.0.1")
+        }
+        iosMain.dependencies {
+            // CoreLocation is available through iOS platform libraries
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
