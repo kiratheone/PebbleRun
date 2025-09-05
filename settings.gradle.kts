@@ -28,4 +28,11 @@ dependencyResolutionManagement {
     }
 }
 
-include(":composeApp")
+include(":apps:composeApp")
+include(":shared:domain")
+include(":shared:data")
+include(":shared:storage")
+include(":shared:util")
+include(":shared:bridge-pebble")
+include(":shared:bridge-location")
+include(":shared:proto")

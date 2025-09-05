@@ -1,0 +1,176 @@
+-- WorkoutDatabase.sq
+-- SQLDelight schema for PebbleRun workout tracking
+-- Supports REQ-005 (Local storage of workout data)
+
+CREATE TABLE WorkoutSession (
+    id TEXT PRIMARY KEY,
+    startTime INTEGER NOT NULL, -- Instant.epochSeconds
+    endTime INTEGER, -- Instant.epochSeconds, NULL for active sessions
+    status TEXT NOT NULL, -- WorkoutStatus enum values
+    totalDistance REAL NOT NULL DEFAULT 0.0, -- meters
+    totalDuration INTEGER NOT NULL DEFAULT 0, -- seconds
+    averagePace REAL, -- seconds per kilometer
+    averageHeartRate INTEGER, -- BPM
+    maxHeartRate INTEGER, -- BPM
+    minHeartRate INTEGER, -- BPM
+    createdAt INTEGER NOT NULL, -- Instant.epochSeconds
+    updatedAt INTEGER NOT NULL  -- Instant.epochSeconds
+);
+
+CREATE TABLE GeoPoint (
+    id TEXT PRIMARY KEY,
+    sessionId TEXT NOT NULL,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    altitude REAL, -- nullable, meters above sea level
+    accuracy REAL NOT NULL, -- horizontal accuracy in meters
+    timestamp INTEGER NOT NULL, -- Instant.epochSeconds
+    speed REAL, -- nullable, meters per second from GPS
+    bearing REAL, -- nullable, direction of travel in degrees (0-359)
+    FOREIGN KEY (sessionId) REFERENCES WorkoutSession(id) ON DELETE CASCADE
+);
+
+CREATE TABLE HRSample (
+    id TEXT PRIMARY KEY,
+    sessionId TEXT NOT NULL,
+    heartRate INTEGER NOT NULL, -- BPM
+    timestamp INTEGER NOT NULL, -- Instant.epochSeconds
+    quality TEXT NOT NULL DEFAULT 'GOOD', -- Quality enum values: GOOD, FAIR, POOR
+    source TEXT NOT NULL DEFAULT 'PEBBLE', -- Source enum values: PEBBLE, MANUAL, OTHER
+    FOREIGN KEY (sessionId) REFERENCES WorkoutSession(id) ON DELETE CASCADE
+);
+
+-- Indexes for performance optimization
+
+CREATE INDEX idx_geopoint_session_timestamp ON GeoPoint(sessionId, timestamp);
+CREATE INDEX idx_hrsample_session_timestamp ON HRSample(sessionId, timestamp);
+CREATE INDEX idx_workout_status ON WorkoutSession(status);
+CREATE INDEX idx_workout_start_time ON WorkoutSession(startTime);
+
+-- Queries for WorkoutSession
+
+selectAll:
+SELECT * FROM WorkoutSession 
+ORDER BY startTime DESC;
+
+selectById:
+SELECT * FROM WorkoutSession 
+WHERE id = ?;
+
+selectByStatus:
+SELECT * FROM WorkoutSession 
+WHERE status = ? 
+ORDER BY startTime DESC;
+
+selectActive:
+SELECT * FROM WorkoutSession 
+WHERE status IN ('STARTED', 'PAUSED') 
+ORDER BY startTime DESC;
+
+insertWorkoutSession:
+INSERT INTO WorkoutSession (id, startTime, endTime, status, totalDistance, totalDuration, averagePace, averageHeartRate, maxHeartRate, minHeartRate, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateWorkoutSession:
+UPDATE WorkoutSession 
+SET endTime = ?, status = ?, totalDistance = ?, totalDuration = ?, averagePace = ?, averageHeartRate = ?, maxHeartRate = ?, minHeartRate = ?, updatedAt = ?
+WHERE id = ?;
+
+updateSessionStats:
+UPDATE WorkoutSession 
+SET totalDistance = ?, totalDuration = ?, averagePace = ?, updatedAt = ?
+WHERE id = ?;
+
+deleteWorkoutSession:
+DELETE FROM WorkoutSession 
+WHERE id = ?;
+
+-- Queries for GeoPoint
+
+selectGeoPointsBySession:
+SELECT * FROM GeoPoint 
+WHERE sessionId = ? 
+ORDER BY timestamp ASC;
+
+selectGeoPointsInTimeRange:
+SELECT * FROM GeoPoint 
+WHERE sessionId = ? AND timestamp BETWEEN ? AND ? 
+ORDER BY timestamp ASC;
+
+selectLastGeoPoint:
+SELECT * FROM GeoPoint 
+WHERE sessionId = ? 
+ORDER BY timestamp DESC 
+LIMIT 1;
+
+insertGeoPoint:
+INSERT INTO GeoPoint (id, sessionId, latitude, longitude, altitude, accuracy, timestamp, speed, bearing)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteGeoPointsBySession:
+DELETE FROM GeoPoint 
+WHERE sessionId = ?;
+
+-- Queries for HRSample
+
+selectHRSamplesBySession:
+SELECT * FROM HRSample 
+WHERE sessionId = ? 
+ORDER BY timestamp ASC;
+
+selectHRSamplesInTimeRange:
+SELECT * FROM HRSample 
+WHERE sessionId = ? AND timestamp BETWEEN ? AND ? 
+ORDER BY timestamp ASC;
+
+selectLastHRSample:
+SELECT * FROM HRSample 
+WHERE sessionId = ? 
+ORDER BY timestamp DESC 
+LIMIT 1;
+
+selectAverageHeartRate:
+SELECT AVG(heartRate)
+FROM HRSample 
+WHERE sessionId = ? AND quality != 'POOR';
+
+selectMaxHeartRate:
+SELECT MAX(heartRate)
+FROM HRSample 
+WHERE sessionId = ? AND quality != 'POOR';
+
+selectMinHeartRate:
+SELECT MIN(heartRate)
+FROM HRSample 
+WHERE sessionId = ? AND quality != 'POOR';
+
+insertHRSample:
+INSERT INTO HRSample (id, sessionId, heartRate, timestamp, quality, source)
+VALUES (?, ?, ?, ?, ?, ?);
+
+deleteHRSamplesBySession:
+DELETE FROM HRSample 
+WHERE sessionId = ?;
+
+-- Analytics queries
+
+selectSessionCount:
+SELECT COUNT(*)
+FROM WorkoutSession 
+WHERE status = 'COMPLETED';
+
+selectTotalDistance:
+SELECT SUM(totalDistance)
+FROM WorkoutSession 
+WHERE status = 'COMPLETED';
+
+selectTotalDuration:
+SELECT SUM(totalDuration)
+FROM WorkoutSession 
+WHERE status = 'COMPLETED';
+
+selectRecentSessions:
+SELECT * FROM WorkoutSession 
+WHERE status = 'COMPLETED' 
+ORDER BY startTime DESC 
+LIMIT ?;
