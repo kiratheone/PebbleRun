@@ -23,6 +23,7 @@ kotlin {
             implementation(projects.shared.storage)
             implementation(projects.shared.util)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
             implementation(libs.sqldelight.runtime)
         }
         
