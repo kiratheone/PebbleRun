@@ -1,59 +1,20 @@
 package com.arikachmad.pebblerun.shared.ui
 
 /**
- * Common interface for platform-specific UI integration
- * Provides abstraction for platform-specific behaviors
+ * Platform abstraction for UI bridge functionality
+ * Implemented by platform-specific modules
  */
 interface UIBridge {
-    
-    /**
-     * Show platform-specific notification
-     */
-    fun showNotification(title: String, message: String)
-    
-    /**
-     * Request platform-specific permissions
-     */
-    suspend fun requestPermissions(): Boolean
-    
-    /**
-     * Start platform-specific background service
-     */
-    fun startBackgroundService()
-    
-    /**
-     * Stop platform-specific background service
-     */
-    fun stopBackgroundService()
-    
-    /**
-     * Handle platform-specific error
-     */
-    fun handleError(error: Throwable)
+    fun showError(message: String)
+    fun showSuccess(message: String)
 }
 
 /**
- * Platform-specific actions that can be triggered from shared ViewModels
+ * Platform abstraction for platform-specific actions
+ * Implemented by platform-specific modules
  */
 interface PlatformActions {
-    
-    /**
-     * Launch Pebble app
-     */
-    suspend fun launchPebbleApp(): Boolean
-    
-    /**
-     * Close Pebble app
-     */
-    suspend fun closePebbleApp(): Boolean
-    
-    /**
-     * Send data to Pebble
-     */
-    suspend fun sendToPebble(key: Int, value: String): Boolean
-    
-    /**
-     * Check if Pebble is connected
-     */
-    suspend fun isPebbleConnected(): Boolean
+    fun startForegroundService()
+    fun stopForegroundService()
+    fun requestPermissions()
 }

@@ -83,12 +83,13 @@ data class HRSample(val bpm: Int, val timestamp: Long)
 
 ## 8. Technical Implementation
 
-### 8.1 Folder Structure (Minimal Clean Architecture)
+### 8.1 Folder Structure (Hybrid Clean Architecture)
 ```
 pebble2hr/
 ├─ apps/
-│  ├─ androidApp/          # Android (Compose UI, ViewModels, DI)
-│  ├─ iosApp/              # iOS (SwiftUI, DI, bridging flows)
+│  ├─ composeApp/          # Shared Business Logic Library (ViewModels, DI)
+│  ├─ androidApp/          # Native Android App (Compose UI, Services)
+│  ├─ iosApp/              # Native iOS App (SwiftUI, Background Modes)
 │  └─ pebble-watchapp/     # Pebble C SDK (PebbleRun)
 │
 ├─ shared/
@@ -101,10 +102,13 @@ pebble2hr/
 │  └─ util/                # Utils (logger, formatter, Result)
 ```
 
-### 8.2 Dependency Rules
-- apps → data, domain  
+### 8.2 Dependency Rules (Hybrid Architecture)
+- androidApp/iosApp → composeApp, data, domain  
+- composeApp → domain, util (minimal shared business logic)
 - data → domain, bridge, storage, proto, util  
 - domain → no dependency  
+
+**Architecture Pattern**: Shared business logic (ViewModels) with platform-specific UI implementation.  
 
 ### 8.3 Watchapp
 - Type: watchapp (not watchface).  

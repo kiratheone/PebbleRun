@@ -3,8 +3,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
 }
 
 kotlin {
@@ -27,21 +25,19 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             // Android-specific dependencies for ViewModels
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
+            implementation(libs.androidx.lifecycle.viewmodel.ktx)
+            implementation(libs.kotlinx.coroutines.android)
         }
         commonMain.dependencies {
-            // Shared dependencies
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
+            // Shared dependencies for business logic only
             implementation(libs.kotlinx.coroutines.core)
             
             // Dependency injection
             implementation(libs.koin.core)
-            implementation(libs.koin.compose)
             
-            // Shared modules
+            // Shared modules - temporarily commented out due to compilation errors
             implementation(project(":shared:domain"))
-            implementation(project(":shared:data"))
+            // implementation(project(":shared:data"))
             implementation(project(":shared:util"))
         }
         iosMain.dependencies {
