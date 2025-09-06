@@ -1,5 +1,7 @@
 package com.arikachmad.pebblerun.android.ui.navigation
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsRun
@@ -38,7 +40,63 @@ fun PebbleRunNavigation(
         NavHost(
             navController = navController,
             startDestination = Screen.Workout.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                ) + fadeIn(
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> -fullWidth },
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                ) + fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { fullWidth -> -fullWidth },
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                ) + fadeIn(
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                ) + fadeOut(
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                )
+            }
         ) {
             composable(Screen.Workout.route) {
                 WorkoutScreen()

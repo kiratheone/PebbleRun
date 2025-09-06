@@ -127,8 +127,8 @@ Comprehensive implementation plan to address platform-specific features and arch
 | TASK-026 | Design and implement iOS SwiftUI screens (Workout, History, Settings) | ✅ | 2025-09-06 |
 | TASK-027 | Create iOS-specific navigation with NavigationStack/NavigationView | ✅ | 2025-09-06 |
 | TASK-028 | Implement iOS Human Interface Guidelines theming and components | ✅ | 2025-09-06 |
-| TASK-029 | Add platform-specific animations and transitions | |  |
-| TASK-030 | Implement platform-specific accessibility features | |  |
+| TASK-029 | Add platform-specific animations and transitions | ✅ | 2025-09-06 |
+| TASK-030 | Implement platform-specific accessibility features | ✅ | 2025-09-06 |
 
 ### Implementation Phase 5: Platform-Specific Services Integration
 

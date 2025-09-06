@@ -1,5 +1,7 @@
 package com.arikachmad.pebblerun.android.ui.screen.workout
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -9,9 +11,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arikachmad.pebblerun.android.ui.theme.PebbleRunTheme
@@ -60,11 +64,28 @@ fun WorkoutScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Status header
+            // Status header with animated color transition
+            val statusColor by animateColorAsState(
+                targetValue = if (uiState.isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = FastOutSlowInEasing
+                ),
+                label = "status_color"
+            )
+            
             Text(
                 text = if (uiState.isActive) "Workout Active" else "Ready to Start",
                 style = MaterialTheme.typography.headlineMedium,
-                color = if (uiState.isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                color = statusColor,
+                modifier = Modifier.semantics {
+                    contentDescription = if (uiState.isActive) {
+                        "Workout is currently active and tracking your exercise"
+                    } else {
+                        "Ready to start a new workout session"
+                    }
+                    heading()
+                }
             )
             
             // Duration display
@@ -87,7 +108,16 @@ fun WorkoutScreen(
                         text = uiState.duration,
                         style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.semantics {
+                            contentDescription = "Workout duration: ${uiState.duration}"
+                            stateDescription = if (uiState.isActive) {
+                                "Timer is running"
+                            } else {
+                                "Timer is stopped"
+                            }
+                            liveRegion()
+                        }
                     )
                 }
             }
@@ -136,7 +166,30 @@ fun WorkoutScreen(
             )
         }
         
-        // Bottom section: Action button
+        // Bottom section: Action button with animations
+        val infiniteTransition = rememberInfiniteTransition(label = "button_animation")
+        val scale by infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = if (uiState.isActive) 1.05f else 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(
+                    durationMillis = 1000,
+                    easing = FastOutSlowInEasing
+                ),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "scale_animation"
+        )
+        
+        val buttonScale by animateFloatAsState(
+            targetValue = if (uiState.isLoading) 0.9f else 1f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            ),
+            label = "button_scale"
+        )
+        
         FloatingActionButton(
             onClick = {
                 if (uiState.isActive) {
@@ -145,7 +198,20 @@ fun WorkoutScreen(
                     viewModel.startWorkout()
                 }
             },
-            modifier = Modifier.size(80.dp),
+            modifier = Modifier
+                .size(80.dp)
+                .scale(scale * buttonScale)
+                .semantics {
+                    contentDescription = if (uiState.isActive) {
+                        "Stop workout session. Current duration: ${uiState.duration}"
+                    } else {
+                        "Start new workout session"
+                    }
+                    role = Role.Button
+                    if (uiState.isLoading) {
+                        stateDescription = "Starting workout, please wait"
+                    }
+                },
             shape = CircleShape,
             containerColor = if (uiState.isActive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
         ) {
@@ -174,37 +240,94 @@ private fun MetricCard(
     unit: String,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        )
+    // Animate card entrance
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+    
+    AnimatedVisibility(
+        visible = visible,
+        enter = slideInVertically(
+            initialOffsetY = { it },
+            animationSpec = tween(
+                durationMillis = 300,
+                easing = FastOutSlowInEasing
+            )
+        ) + fadeIn(
+            animationSpec = tween(
+                durationMillis = 300,
+                easing = FastOutSlowInEasing
+            )
+        ),
+        modifier = modifier
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-            if (unit.isNotEmpty()) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
-                    text = unit,
-                    style = MaterialTheme.typography.labelSmall,
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Animate value changes
+                AnimatedContent(
+                    targetState = value,
+                    transitionSpec = {
+                        if (targetState != initialState) {
+                            slideInVertically { height -> -height } + fadeIn() togetherWith
+                                    slideOutVertically { height -> height } + fadeOut()
+                        } else {
+                            EnterTransition.None togetherWith ExitTransition.None
+                        }.using(
+                            SizeTransform(clip = false)
+                        )
+                    },
+                    label = "value_animation"
+                ) { animatedValue ->
+                    Text(
+                        text = animatedValue,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.semantics {
+                            contentDescription = "$title: $animatedValue $unit"
+                            if (title == "Heart Rate" && animatedValue != "--") {
+                                stateDescription = when {
+                                    animatedValue.toIntOrNull() != null -> {
+                                        val hr = animatedValue.toInt()
+                                        when {
+                                            hr < 60 -> "Resting heart rate"
+                                            hr < 100 -> "Normal heart rate"
+                                            hr < 150 -> "Elevated heart rate"
+                                            else -> "High intensity heart rate"
+                                        }
+                                    }
+                                    else -> "Heart rate reading"
+                                }
+                            }
+                        }
+                    )
+                }
+                
+                if (unit.isNotEmpty()) {
+                    Text(
+                        text = unit,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }

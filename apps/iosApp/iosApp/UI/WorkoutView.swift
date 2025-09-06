@@ -2,8 +2,32 @@ import SwiftUI
 import shared
 
 /**
- * Native iOS SwiftUI view for workout tracking screen.
- * Implements TASK-015: Create iOS-specific SwiftUI views with proper navigation.
+ * Native iOS SwiftUI view for workout trac    private var workoutStatusHeader: some View {
+        VStack(spacing: 12) {
+            Image(systemName: viewModel.isWorkoutActive ? "figure.run" : "figure.stand")
+                .font(.system(size: 40, weight: .medium))
+                .foregroundColor(viewModel.isWorkoutActive ? .green : .secondary)
+                .scaleEffect(viewModel.isWorkoutActive ? 1.1 : 1.0)
+                .animation(.easeInOut(duration: 0.3), value: viewModel.isWorkoutActive)
+            
+            Text(viewModel.workoutStatusText)
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+                .transition(.opacity.combined(with: .scale))
+                .animation(.easeInOut(duration: 0.3), value: viewModel.workoutStatusText)
+                .accessibilityLabel("Workout status")
+                .accessibilityValue(viewModel.isWorkoutActive ? "Active workout in progress" : "Ready to start workout")
+            
+            if viewModel.isWorkoutActive {
+                Text("Started: \(viewModel.workoutStartTime)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .animation(.easeInOut(duration: 0.5).delay(0.2), value: viewModel.isWorkoutActive)
+            }
+        }
+        .padding(.vertical, 16)plements TASK-015: Create iOS-specific SwiftUI views with proper navigation.
  * Follows GUD-002: iOS Human Interface Guidelines with native SwiftUI.
  */
 struct WorkoutView: View {
@@ -101,23 +125,36 @@ struct WorkoutView: View {
                 Image(systemName: "play.circle.fill")
                     .font(.system(size: 60))
                     .foregroundColor(.accentColor)
+                    .scaleEffect(1.0)
+                    .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: 1.1)
+                    .onAppear {
+                        withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                            // Pulsing animation for start button
+                        }
+                    }
                 
                 Text("Ready to Start")
                     .font(.title2)
                     .fontWeight(.semibold)
+                    .transition(.opacity.combined(with: .scale))
                 
                 Text("Connect your Pebble and start tracking your workout")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
             
             Button(action: {
-                viewModel.startWorkout()
+                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                    viewModel.startWorkout()
+                }
             }) {
                 HStack {
                     Image(systemName: "play.fill")
+                        .transition(.scale.combined(with: .opacity))
                     Text("Start Workout")
+                        .transition(.opacity)
                 }
                 .font(.headline)
                 .foregroundColor(.white)
@@ -131,8 +168,15 @@ struct WorkoutView: View {
                     )
                 )
                 .cornerRadius(12)
+                .scaleEffect(viewModel.isPebbleConnected ? 1.0 : 0.95)
+                .animation(.easeInOut(duration: 0.2), value: viewModel.isPebbleConnected)
             }
             .disabled(!viewModel.isPebbleConnected)
+            .accessibilityLabel("Start workout")
+            .accessibilityHint(viewModel.isPebbleConnected ? 
+                "Begins tracking your workout session" : 
+                "Connect to Pebble first to start workout")
+            .accessibilityTraits(viewModel.isPebbleConnected ? [] : [.notEnabled])
         }
         .padding(24)
         .background(Color(.secondarySystemBackground))
@@ -147,6 +191,11 @@ struct WorkoutView: View {
                 Text(viewModel.workoutDuration)
                     .font(.system(size: 48, weight: .bold, design: .monospaced))
                     .foregroundColor(.primary)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.workoutDuration)
+                    .accessibilityLabel("Workout duration")
+                    .accessibilityValue("\(viewModel.workoutDuration)")
+                    .accessibilityTraits(viewModel.isWorkoutActive ? [.updatesFrequently] : [])
                 
                 Text("Duration")
                     .font(.caption)
@@ -265,21 +314,35 @@ struct WorkoutView: View {
         HStack {
             Image(systemName: viewModel.isPebbleConnected ? "checkmark.circle.fill" : "xmark.circle.fill")
                 .foregroundColor(viewModel.isPebbleConnected ? .green : .red)
+                .scaleEffect(viewModel.isPebbleConnected ? 1.1 : 1.0)
+                .animation(.spring(response: 0.5, dampingFraction: 0.6), value: viewModel.isPebbleConnected)
+                .accessibilityLabel("Pebble connection status")
+                .accessibilityValue(viewModel.isPebbleConnected ? "Connected" : "Disconnected")
             
             Text(viewModel.pebbleStatusText)
                 .font(.body)
                 .foregroundColor(.primary)
+                .transition(.opacity.combined(with: .move(edge: .leading)))
+                .animation(.easeInOut(duration: 0.3), value: viewModel.pebbleStatusText)
+                .accessibilityHidden(true)
             
             Spacer()
             
             if !viewModel.isPebbleConnected {
                 Button("Connect") {
-                    viewModel.connectToPebble()
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                        viewModel.connectToPebble()
+                    }
                 }
                 .font(.caption)
                 .foregroundColor(.accentColor)
+                .transition(.opacity.combined(with: .scale))
+                .animation(.easeInOut(duration: 0.3), value: viewModel.isPebbleConnected)
+                .accessibilityLabel("Connect to Pebble")
+                .accessibilityHint("Establishes connection with your Pebble watch")
             }
         }
+        .accessibilityElement(children: .combine)
         .padding(16)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
@@ -292,16 +355,24 @@ struct StatCard: View {
     let value: String
     let icon: String
     let color: Color
+    @State private var isAnimating = false
     
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 24))
                 .foregroundColor(color)
+                .scaleEffect(isAnimating ? 1.1 : 1.0)
+                .animation(.easeInOut(duration: 0.3), value: isAnimating)
             
             Text(value)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.primary)
+                .contentTransition(.numericText())
+                .animation(.easeInOut(duration: 0.3), value: value)
+                .accessibilityLabel("\(title)")
+                .accessibilityValue("\(value)")
+                .accessibilityTraits(title == "Heart Rate" ? [.updatesFrequently] : [])
             
             Text(title)
                 .font(.caption)
@@ -311,6 +382,22 @@ struct StatCard: View {
         .padding(.vertical, 16)
         .background(Color(.tertiarySystemBackground))
         .cornerRadius(12)
+        .scaleEffect(isAnimating ? 1.02 : 1.0)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.5).delay(0.1)) {
+                isAnimating = true
+            }
+        }
+        .onChange(of: value) { _, _ in
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                isAnimating.toggle()
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    isAnimating.toggle()
+                }
+            }
+        }
     }
 }
 
