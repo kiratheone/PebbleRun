@@ -24,20 +24,21 @@ kotlin {
         
         framework {
             baseName = "BridgePebble"
-            isStatic = false // Use dynamic framework for CocoaPods compatibility
+            isStatic = false
         }
         
-        // Configure PebbleKit pod
-        pod("PebbleKit") {
-            version = "~> 4.0" // Match Android version 4.0.1
-            // If you need to specify a custom source or configuration
-            // source = "https://github.com/pebble/pebblekit-ios"
+        // Create conditional pod configuration based on project properties
+        val enablePebbleKit = project.findProperty("pebblekit.enabled")?.toString()?.toBoolean() 
+            ?: true // Default to enabled
+        
+        if (enablePebbleKit) {
+            pod("PebbleKit") {
+                version = "~> 4.0"
+                // Enable weak linking - framework will be optional at runtime
+                linkOnly = true
+            }
         }
         
-        // Optional: Add other iOS dependencies if needed
-        // pod("Alamofire") { version = "~> 5.0" }
-        
-        // Specify podfile location if non-standard
         podfile = project.file("../apps/iosApp/Podfile")
     }
     
@@ -49,14 +50,12 @@ kotlin {
             implementation(libs.kotlinx.datetime)
         }
         androidMain.dependencies {
-            // https://mvnrepository.com/artifact/com.getpebble/pebblekit
             implementation("com.getpebble:pebblekit:4.0.1")
             implementation("androidx.core:core-ktx:1.12.0")
             implementation("androidx.lifecycle:lifecycle-service:2.7.0")
         }
         iosMain.dependencies {
-            // PebbleKit iOS will be linked through XCFramework or CocoaPods
-            // The framework should be available in the iOS project
+            // PebbleKit conditionally available
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -74,5 +73,15 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+// Task configuration to disable PebbleKit for simulator builds
+tasks.configureEach {
+    val isSimulatorTask = name.contains("Simulator", ignoreCase = true)
+    
+    if (isSimulatorTask && name.startsWith("linkPod") || name.contains("linkDebug")) {
+        // Disable PebbleKit pod linking for simulator tasks
+        enabled = false
     }
 }
