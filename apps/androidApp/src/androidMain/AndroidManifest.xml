@@ -1,33 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Location permissions for GPS tracking - REQ-002 -->
+    <!-- Location permissions for GPS tracking -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     
-    <!-- Background location access for workout tracking - REQ-004 -->
+    <!-- Background location for foreground service -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     
-    <!-- Bluetooth permissions for Pebble communication - REQ-001 -->
+    <!-- Bluetooth permissions for Pebble communication -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     
-    <!-- Foreground service permissions - GUD-001 -->
+    <!-- Foreground service permission -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     
-    <!-- Wake lock for background tracking - CON-001 -->
+    <!-- Wake lock for background processing -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     
-    <!-- Notifications for workout updates - TASK-032 -->
+    <!-- Notification permission (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
+        android:name=".PebbleRunApplication"
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.PebbleRun">
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PebbleRun"
+        tools:targetApi="31">
         
         <activity
             android:name=".MainActivity"
@@ -39,14 +47,13 @@
             </intent-filter>
         </activity>
         
-        <!-- Workout Tracking Foreground Service - TASK-028 -->
+        <!-- Foreground Service for workout tracking -->
         <service
-            android:name="com.arikachmad.pebblerun.android.service.WorkoutTrackingService"
+            android:name=".service.WorkoutTrackingService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="location"
-            android:stopWithTask="false" />
-        
+            android:foregroundServiceType="location" />
+
     </application>
 
 </manifest>

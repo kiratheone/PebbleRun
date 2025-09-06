@@ -13,15 +13,12 @@ kotlin {
     
     sourceSets {
         androidMain.dependencies {
-            // Compose BOM
-            implementation(platform("androidx.compose:compose-bom:2024.12.01"))
-            
-            // Compose dependencies
-            implementation("androidx.compose.ui:ui")
-            implementation("androidx.compose.ui:ui-graphics")
-            implementation("androidx.compose.ui:ui-tooling-preview")
-            implementation("androidx.compose.material3:material3")
-            implementation("androidx.compose.material:material-icons-extended")
+            // Compose dependencies  
+            implementation("androidx.compose.ui:ui:1.7.7")
+            implementation("androidx.compose.ui:ui-graphics:1.7.7")
+            implementation("androidx.compose.ui:ui-tooling-preview:1.7.7")
+            implementation("androidx.compose.material3:material3:1.3.1")
+            implementation("androidx.compose.material:material-icons-extended:1.7.7")
             
             // Activity Compose
             implementation(libs.androidx.activity.compose)
@@ -36,6 +33,12 @@ kotlin {
             // Dependency Injection
             implementation(libs.koin.android)
             implementation(libs.koin.compose)
+            
+            // Security - Jetpack Security
+            implementation("androidx.security:security-crypto:1.1.0-alpha06")
+            
+            // WorkManager for background tasks
+            implementation("androidx.work:work-runtime-ktx:2.9.0")
             
             // Coroutines
             implementation(libs.kotlinx.coroutines.android)
@@ -95,6 +98,6 @@ android {
 }
 
 dependencies {
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.7.7")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.7.7")
 }

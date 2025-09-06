@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PebbleRun</string>
+    
+    <!-- Navigation -->
+    <string name="nav_workout">Workout</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+    
+    <!-- Workout Screen -->
+    <string name="workout_ready">Ready to Start</string>
+    <string name="workout_active">Workout Active</string>
+    <string name="start_workout">Start Workout</string>
+    <string name="stop_workout">Stop Workout</string>
+    <string name="duration">Duration</string>
+    <string name="heart_rate">Heart Rate</string>
+    <string name="pace">Pace</string>
+    <string name="distance">Distance</string>
+    <string name="calories">Calories</string>
+    
+    <!-- Units -->
+    <string name="unit_bpm">BPM</string>
+    <string name="unit_km">KM</string>
+    <string name="unit_kcal">KCAL</string>
+    
+    <!-- Permissions -->
+    <string name="permission_location_title">Location Permission</string>
+    <string name="permission_location_desc">Required for GPS tracking during workouts</string>
+    <string name="permission_bluetooth_title">Bluetooth Permission</string>
+    <string name="permission_bluetooth_desc">Required to connect to your Pebble watch</string>
+    
+    <!-- Notifications -->
+    <string name="notification_channel_workout">Workout Tracking</string>
+    <string name="notification_channel_workout_desc">Notifications for active workout sessions</string>
+    <string name="notification_workout_active">Workout in progress</string>
+    
+    <!-- Coming Soon -->
+    <string name="coming_soon">Coming Soon</string>
+    <string name="history_description">Your completed workouts and analytics will be displayed here.</string>
+    <string name="settings_description">App preferences and Pebble connection settings will be configured here.</string>
+</resources>

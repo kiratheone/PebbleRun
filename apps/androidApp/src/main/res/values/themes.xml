@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="Theme.PebbleRun" parent="android:Theme.Material.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-    </style>
-</resources>
