@@ -28,6 +28,14 @@
             <string>bluetooth-central</string>
             <string>location</string>
             <string>background-processing</string>
+            <string>background-fetch</string>
+        </array>
+        
+        <!-- Background task identifiers for BGTaskScheduler -->
+        <key>BGTaskSchedulerPermittedIdentifiers</key>
+        <array>
+            <string>com.arikachmad.pebblerun.workout-tracking</string>
+            <string>com.arikachmad.pebblerun.background-refresh</string>
         </array>
         
         <!-- App Transport Security - allow HTTP connections to Pebble if needed -->
