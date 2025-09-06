@@ -18,6 +18,7 @@ kotlinx-serialization = "1.7.1"
 sqldelight = "2.0.2"
 koin = "3.5.6"
 ktor = "2.3.12"
+kmp-nativecoroutines = "1.0.0-ALPHA-31"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -54,6 +55,9 @@ koin-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+
+# KMP-NativeCoroutines for iOS Flow integration
+kmp-nativecoroutines = { module = "com.rickclephas.kmp:kmp-nativecoroutines-core", version.ref = "kmp-nativecoroutines" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
