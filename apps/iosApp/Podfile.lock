@@ -1,23 +1,16 @@
 PODS:
-  - bridge_pebble (1.0.0):
-    - PebbleKit (~> 4.0)
   - PebbleKit (4.0.0)
 
 DEPENDENCIES:
-  - bridge_pebble (from `../../shared/bridge-pebble`)
+  - PebbleKit (~> 4.0)
 
 SPEC REPOS:
   trunk:
     - PebbleKit
 
-EXTERNAL SOURCES:
-  bridge_pebble:
-    :path: "../../shared/bridge-pebble"
-
 SPEC CHECKSUMS:
-  bridge_pebble: 11fadbf27ca4f86218b9e3ffd07a998e6f804893
   PebbleKit: 4af7a5f57522cbd371f1798e6dd80bd21ac9d46f
 
-PODFILE CHECKSUM: 190e0433cfe034f3fb5a24095414bdf84831da6e
+PODFILE CHECKSUM: ff11d4028459c7cfd74a555631dde79ea389843a
 
 COCOAPODS: 1.16.2

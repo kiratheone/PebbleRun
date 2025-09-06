@@ -7,7 +7,11 @@ target 'iosApp' do
 
   # Pods for iosApp
   
+  # PebbleKit for Pebble smartwatch connectivity
+  pod 'PebbleKit', '~> 4.0'
+  
   # Kotlin Multiplatform CocoaPods integration
-  pod 'bridge_pebble', :path => '../../shared/bridge-pebble'
+  # Temporarily commented out for testing
+  # pod 'bridge_pebble', :path => '../../shared/bridge-pebble'
 
 end
