@@ -6,7 +6,6 @@ import com.arikachmad.pebblerun.domain.repository.WorkoutRepository
 import com.arikachmad.pebblerun.domain.error.DomainResult
 import com.arikachmad.pebblerun.domain.error.DomainError
 import kotlinx.datetime.Clock
-import kotlin.time.Duration.Companion.hours
 
 /**
  * Use case for stopping and finalizing a workout session.
@@ -29,22 +28,18 @@ class StopWorkoutUseCase(
             // 4. Update status to COMPLETED
             // 5. Save to repository
             
-            val endTime = Clock.System.now()
-            val startTime = endTime - 1.hours // 1 hour ago
+            val endTime = Clock.System.now().toEpochMilliseconds()
             val session = WorkoutSession(
                 id = params.sessionId,
-                startTime = startTime,
+                startTime = endTime - 3600000, // Dummy: 1 hour ago
                 endTime = endTime,
-                status = WorkoutStatus.COMPLETED,
-                totalDuration = 3600L, // 1 hour in seconds
-                totalDistance = 5000.0, // 5km
-                averagePace = 300.0, // 5:00/km in seconds per km
-                averageHeartRate = 150,
-                maxHeartRate = 180,
-                minHeartRate = 120,
-                calories = 400,
-                geoPoints = emptyList(),
+                duration = 3600000, // 1 hour
+                distanceMeters = 5000.0, // 5km
+                avgPace = "05:00/km",
+                avgHR = 150,
+                gpsTrack = emptyList(),
                 hrSamples = emptyList(),
+                status = WorkoutStatus.COMPLETED,
                 notes = ""
             )
             

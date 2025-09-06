@@ -1,7 +1,6 @@
 package com.arikachmad.pebblerun.domain.integration
 
 import com.arikachmad.pebblerun.domain.entity.WorkoutSession
-import com.arikachmad.pebblerun.domain.entity.WorkoutStatus
 import com.arikachmad.pebblerun.domain.repository.WorkoutRepository
 import com.arikachmad.pebblerun.domain.usecase.StartWorkoutUseCase
 import com.arikachmad.pebblerun.domain.usecase.StopWorkoutUseCase
@@ -10,8 +9,6 @@ import com.arikachmad.pebblerun.domain.error.DomainResult
 import com.arikachmad.pebblerun.domain.error.DomainError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 
 /**
  * Central integration manager that coordinates all components of the PebbleRun system.
@@ -40,7 +37,7 @@ class WorkoutIntegrationManager(
         return try {
             _systemState.value = SystemState.STARTING_WORKOUT
             
-            val result = startWorkoutUseCase(StartWorkoutUseCase.Params())
+            val result = startWorkoutUseCase.execute()
             when (result) {
                 is DomainResult.Success -> {
                     _currentWorkout.value = result.data
@@ -72,7 +69,7 @@ class WorkoutIntegrationManager(
         return try {
             _systemState.value = SystemState.STOPPING_WORKOUT
             
-            val result = stopWorkoutUseCase(StopWorkoutUseCase.Params(currentSession.id))
+            val result = stopWorkoutUseCase.execute(currentSession.id)
             when (result) {
                 is DomainResult.Success -> {
                     _currentWorkout.value = null
@@ -106,13 +103,11 @@ class WorkoutIntegrationManager(
             )
         
         return try {
-            val result = updateWorkoutDataUseCase(
-                UpdateWorkoutDataUseCase.Params(
-                    sessionId = currentSession.id,
-                    heartRate = heartRate,
-                    pace = pace,
-                    distance = distance
-                )
+            val result = updateWorkoutDataUseCase.execute(
+                sessionId = currentSession.id,
+                heartRate = heartRate,
+                pace = pace,
+                distance = distance
             )
             
             when (result) {
@@ -130,8 +125,9 @@ class WorkoutIntegrationManager(
     }
 }
 
-// Supporting data classes and enums
-
+/**
+ * System state enumeration
+ */
 enum class SystemState {
     IDLE,
     STARTING_WORKOUT,

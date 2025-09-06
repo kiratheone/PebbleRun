@@ -28,18 +28,15 @@ class StartWorkoutUseCase(
             val sessionId = params.sessionId ?: generateSessionId()
             val session = WorkoutSession(
                 id = sessionId,
-                startTime = params.startTime,
+                startTime = params.startTime.toEpochMilliseconds(),
                 endTime = null,
-                status = WorkoutStatus.ACTIVE,
-                totalDuration = 0L,
-                totalDistance = 0.0,
-                averagePace = 0.0,
-                averageHeartRate = 0,
-                maxHeartRate = 0,
-                minHeartRate = 0,
-                calories = 0,
-                geoPoints = emptyList(),
+                duration = 0L,
+                distanceMeters = 0.0,
+                avgPace = "00:00/km",
+                avgHR = 0,
+                gpsTrack = emptyList(),
                 hrSamples = emptyList(),
+                status = WorkoutStatus.ACTIVE,
                 notes = params.notes
             )
             

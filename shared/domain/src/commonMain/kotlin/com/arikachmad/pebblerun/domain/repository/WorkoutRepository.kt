@@ -2,6 +2,7 @@ package com.arikachmad.pebblerun.domain.repository
 
 import com.arikachmad.pebblerun.domain.entity.WorkoutSession
 import com.arikachmad.pebblerun.domain.entity.WorkoutStatus
+import com.arikachmad.pebblerun.domain.error.DomainResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
 
@@ -15,18 +16,18 @@ interface WorkoutRepository {
      * Creates a new workout session
      * Supports TASK-011 (StartWorkoutUseCase implementation)
      */
-    suspend fun createSession(session: WorkoutSession): Result<WorkoutSession>
+    suspend fun createSession(session: WorkoutSession): DomainResult<WorkoutSession>
     
     /**
      * Updates an existing workout session
      * Supports TASK-013 (UpdateWorkoutDataUseCase for real-time updates)
      */
-    suspend fun updateSession(session: WorkoutSession): Result<WorkoutSession>
+    suspend fun updateSession(session: WorkoutSession): DomainResult<WorkoutSession>
     
     /**
      * Retrieves a workout session by ID
      */
-    suspend fun getSessionById(id: String): Result<WorkoutSession?>
+    suspend fun getSessionById(id: String): DomainResult<WorkoutSession?>
     
     /**
      * Retrieves all workout sessions with optional filtering
@@ -38,7 +39,7 @@ interface WorkoutRepository {
         status: WorkoutStatus? = null,
         startDate: Instant? = null,
         endDate: Instant? = null
-    ): Result<List<WorkoutSession>>
+    ): DomainResult<List<WorkoutSession>>
     
     /**
      * Observes workout sessions for real-time updates
@@ -55,13 +56,13 @@ interface WorkoutRepository {
     /**
      * Deletes a workout session
      */
-    suspend fun deleteSession(id: String): Result<Unit>
+    suspend fun deleteSession(id: String): DomainResult<Unit>
     
     /**
      * Gets the currently active session (if any)
      * Supports REQ-004 (Background tracking capability)
      */
-    suspend fun getActiveSession(): Result<WorkoutSession?>
+    suspend fun getActiveSession(): DomainResult<WorkoutSession?>
     
     /**
      * Observes the currently active session
@@ -77,25 +78,25 @@ interface WorkoutRepository {
         id: String,
         endTime: Instant,
         finalStats: WorkoutSessionStats
-    ): Result<WorkoutSession>
+    ): DomainResult<WorkoutSession>
     
     /**
      * Gets session statistics summary
      * Supports workout analytics and history
      */
-    suspend fun getSessionStats(id: String): Result<WorkoutSessionStats?>
+    suspend fun getSessionStats(id: String): DomainResult<WorkoutSessionStats?>
     
     /**
      * Exports workout data for backup
      * Supports TASK-019 (backup and restore functionality)
      */
-    suspend fun exportSessions(sessionIds: List<String>): Result<String>
+    suspend fun exportSessions(sessionIds: List<String>): DomainResult<String>
     
     /**
      * Imports workout data from backup
      * Supports TASK-019 (backup and restore functionality)
      */
-    suspend fun importSessions(data: String): Result<List<WorkoutSession>>
+    suspend fun importSessions(data: String): DomainResult<List<WorkoutSession>>
 }
 
 /**

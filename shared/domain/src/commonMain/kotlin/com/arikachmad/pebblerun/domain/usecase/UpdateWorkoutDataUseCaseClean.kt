@@ -6,7 +6,6 @@ import com.arikachmad.pebblerun.domain.repository.WorkoutRepository
 import com.arikachmad.pebblerun.domain.error.DomainResult
 import com.arikachmad.pebblerun.domain.error.DomainError
 import kotlinx.datetime.Clock
-import kotlin.time.Duration.Companion.minutes
 
 /**
  * Use case for updating workout data during an active session.
@@ -31,22 +30,18 @@ class UpdateWorkoutDataUseCase(
             // 3. Recalculate derived values (avg HR, avg pace, etc.)
             // 4. Save updated session to repository
             
-            val currentTime = Clock.System.now()
-            val startTime = currentTime - 30.minutes // 30 minutes ago
+            val currentTime = Clock.System.now().toEpochMilliseconds()
             val session = WorkoutSession(
                 id = params.sessionId,
-                startTime = startTime,
+                startTime = currentTime - 1800000, // 30 minutes ago
                 endTime = null,
-                status = WorkoutStatus.ACTIVE,
-                totalDuration = 1800L, // 30 minutes in seconds
-                totalDistance = params.distance ?: 2500.0,
-                averagePace = 300.0, // 5:00/km in seconds per km
-                averageHeartRate = params.heartRate ?: 145,
-                maxHeartRate = (params.heartRate ?: 145) + 20,
-                minHeartRate = (params.heartRate ?: 145) - 20,
-                calories = 200,
-                geoPoints = emptyList(),
+                duration = 1800000, // 30 minutes
+                distanceMeters = params.distance ?: 2500.0,
+                avgPace = params.pace ?: "05:00/km",
+                avgHR = params.heartRate ?: 145,
+                gpsTrack = emptyList(),
                 hrSamples = emptyList(),
+                status = WorkoutStatus.ACTIVE,
                 notes = ""
             )
             
