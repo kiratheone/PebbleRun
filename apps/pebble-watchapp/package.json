@@ -1,0 +1,28 @@
+{
+  "name": "pebblerun-watchapp",
+  "version": "1.0.0",
+  "description": "PebbleRun - HR and workout tracking watchapp for Pebble 2 HR",
+  "author": "PebbleRun Team",
+  "license": "MIT",
+  "pebble": {
+    "displayName": "PebbleRun",
+    "uuid": "a8c7e0f1-2d4e-4a6b-8c9e-1f3a5b7d9e0f",
+    "sdkVersion": "3",
+    "targetPlatforms": ["basalt"],
+    "watchapp": {
+      "watchface": false
+    },
+    "appKeys": {
+      "PACE": 0,
+      "TIME": 1,
+      "HR": 2,
+      "CMD": 3
+    },
+    "capabilities": [
+      "health"
+    ],
+    "resources": {
+      "media": []
+    }
+  }
+}
