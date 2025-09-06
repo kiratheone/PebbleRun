@@ -33,6 +33,11 @@ sealed class PebbleRunError : Exception() {
     data class NetworkError(override val message: String, override val cause: Throwable? = null) : PebbleRunError()
     data class SyncError(override val message: String) : PebbleRunError()
     
+    // System/Integration Errors
+    data class SystemNotReadyError(override val message: String) : PebbleRunError()
+    data class ComponentUnavailableError(override val message: String) : PebbleRunError()
+    data class IntegrationError(override val message: String, override val cause: Throwable? = null) : PebbleRunError()
+    
     // Generic Errors
     data class ValidationError(override val message: String) : PebbleRunError()
     data class UnknownError(override val message: String, override val cause: Throwable? = null) : PebbleRunError()
