@@ -1,0 +1,13 @@
+# Uncomment the next line to define a global platform for your project
+platform :ios, '15.3'
+
+target 'iosApp' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Pods for iosApp
+  
+  # Kotlin Multiplatform CocoaPods integration
+  pod 'bridge_pebble', :path => '../../shared/bridge-pebble'
+
+end

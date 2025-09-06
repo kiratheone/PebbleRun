@@ -4,5 +4,45 @@
     <dict>
         <key>CADisableMinimumFrameDurationOnPhone</key>
         <true/>
+        
+        <!-- Bluetooth permissions for PebbleKit communication -->
+        <key>NSBluetoothAlwaysUsageDescription</key>
+        <string>This app needs Bluetooth to communicate with your Pebble watch for workout tracking and heart rate monitoring</string>
+        
+        <key>NSBluetoothPeripheralUsageDescription</key>
+        <string>This app needs Bluetooth to communicate with your Pebble watch for workout tracking and heart rate monitoring</string>
+        
+        <!-- Location permissions for GPS tracking -->
+        <key>NSLocationWhenInUseUsageDescription</key>
+        <string>This app needs location access to track your workout route, distance, and pace during exercise sessions</string>
+        
+        <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+        <string>This app needs location access to track your workout route, distance, and pace during exercise sessions, even when the app is in the background</string>
+        
+        <key>NSLocationAlwaysUsageDescription</key>
+        <string>This app needs location access to track your workout route, distance, and pace during exercise sessions, even when the app is in the background</string>
+        
+        <!-- Background modes for continuous tracking -->
+        <key>UIBackgroundModes</key>
+        <array>
+            <string>bluetooth-central</string>
+            <string>location</string>
+            <string>background-processing</string>
+        </array>
+        
+        <!-- App Transport Security - allow HTTP connections to Pebble if needed -->
+        <key>NSAppTransportSecurity</key>
+        <dict>
+            <key>NSAllowsArbitraryLoads</key>
+            <false/>
+            <key>NSExceptionDomains</key>
+            <dict>
+                <key>localhost</key>
+                <dict>
+                    <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                    <true/>
+                </dict>
+            </dict>
+        </dict>
     </dict>
 </plist>

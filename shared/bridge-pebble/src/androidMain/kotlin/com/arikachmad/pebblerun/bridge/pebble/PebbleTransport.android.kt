@@ -1,12 +1,14 @@
 package com.arikachmad.pebblerun.bridge.pebble
 
 import android.content.Context
+import android.content.BroadcastReceiver
 import com.arikachmad.pebblerun.bridge.pebble.model.HRDataFromPebble
 import com.arikachmad.pebblerun.bridge.pebble.model.PebbleConnectionState
 import com.arikachmad.pebblerun.bridge.pebble.model.PebbleResult
 import com.arikachmad.pebblerun.bridge.pebble.model.WorkoutCommand
 import com.arikachmad.pebblerun.bridge.pebble.model.WorkoutDataToPebble
 import com.arikachmad.pebblerun.proto.PebbleMessageKeys
+// PebbleKit imports - now enabled
 import com.getpebble.android.kit.PebbleKit
 import com.getpebble.android.kit.util.PebbleDictionary
 import kotlinx.coroutines.flow.Flow
@@ -38,9 +40,9 @@ actual class PebbleTransport(private val context: Context) {
     private val _connectionStateFlow = MutableStateFlow(PebbleConnectionState.DISCONNECTED)
     actual val connectionStateFlow: Flow<PebbleConnectionState> = _connectionStateFlow.asStateFlow()
     
-    private var messageReceiver: PebbleKit.PebbleDataReceiver? = null
-    private var connectionReceiver: PebbleKit.PebbleAckReceiver? = null
-    private var nackReceiver: PebbleKit.PebbleNackReceiver? = null
+    private var messageReceiver: BroadcastReceiver? = null
+    private var connectionReceiver: BroadcastReceiver? = null
+    private var nackReceiver: BroadcastReceiver? = null
     
     /**
      * Flow of HR data from Pebble device.
@@ -48,34 +50,36 @@ actual class PebbleTransport(private val context: Context) {
      * Does not leak platform callbacks to domain layer per bridge instructions.
      */
     actual val heartRateFlow: Flow<HRDataFromPebble> = callbackFlow {
-        val receiver = PebbleKit.PebbleDataReceiver(PEBBLERUN_UUID) { transactionId, data ->
-            try {
-                val heartRate = data.getInteger(PebbleMessageKeys.KEY_HEART_RATE.toLong())
-                val quality = data.getInteger(PebbleMessageKeys.KEY_HR_QUALITY.toLong()) ?: 1
-                
-                if (heartRate != null && PebbleMessageKeys.isValidHeartRate(heartRate.toInt())) {
-                    val hrData = HRDataFromPebble(
-                        heartRate = heartRate.toInt(),
-                        quality = quality.toInt(),
-                        timestamp = Clock.System.now()
-                    )
-                    trySend(hrData)
+        val receiver = object : PebbleKit.PebbleDataReceiver(PEBBLERUN_UUID) {
+            override fun receiveData(context: Context?, transactionId: Int, data: PebbleDictionary?) {
+                try {
+                    val heartRate = data?.getInteger(PebbleMessageKeys.KEY_HEART_RATE)
+                    val quality = data?.getInteger(PebbleMessageKeys.KEY_HR_QUALITY) ?: 1L
+                    
+                    if (heartRate != null && PebbleMessageKeys.isValidHeartRate(heartRate.toInt())) {
+                        val hrData = HRDataFromPebble(
+                            heartRate = heartRate.toInt(),
+                            quality = quality.toInt(),
+                            timestamp = Clock.System.now()
+                        )
+                        trySend(hrData)
+                    }
+                    
+                    // Always ACK the message to confirm receipt
+                    PebbleKit.sendAckToPebble(context, transactionId)
+                } catch (e: Exception) {
+                    // Log error but don't crash - send NACK instead
+                    PebbleKit.sendNackToPebble(context, transactionId)
                 }
-                
-                // Always ACK the message
-                PebbleKit.sendAckToPebble(context, transactionId)
-            } catch (e: Exception) {
-                // Log error but don't crash
-                PebbleKit.sendNackToPebble(context, transactionId)
             }
         }
         
-        PebbleKit.registerReceivedDataHandler(context, receiver)
-        messageReceiver = receiver
+        // Register the data receiver with PebbleKit
+        messageReceiver = PebbleKit.registerReceivedDataHandler(context, receiver)
         
         awaitClose {
             messageReceiver?.let { 
-                PebbleKit.unregisterReceivedDataHandler(context, it)
+                context.unregisterReceiver(it)
             }
         }
     }
@@ -86,23 +90,27 @@ actual class PebbleTransport(private val context: Context) {
      */
     actual suspend fun initialize(): PebbleResult<Unit> {
         return try {
-            // Check if Pebble app is installed
+            // Check if Pebble app is installed and watch is connected
             if (!PebbleKit.isWatchConnected(context)) {
                 _connectionStateFlow.value = PebbleConnectionState.DISCONNECTED
                 return PebbleResult.Error("No Pebble watch connected")
             }
             
             // Set up ACK receiver for successful message delivery
-            connectionReceiver = PebbleKit.PebbleAckReceiver(PEBBLERUN_UUID) { transactionId ->
-                // Message sent successfully
+            val ackReceiver = object : PebbleKit.PebbleAckReceiver(PEBBLERUN_UUID) {
+                override fun receiveAck(context: Context?, transactionId: Int) {
+                    // Message sent successfully - could be used for delivery confirmation
+                }
             }
-            PebbleKit.registerReceivedAckHandler(context, connectionReceiver)
+            connectionReceiver = PebbleKit.registerReceivedAckHandler(context, ackReceiver)
             
             // Set up NACK receiver for failed message delivery
-            nackReceiver = PebbleKit.PebbleNackReceiver(PEBBLERUN_UUID) { transactionId ->
-                // Message failed to send - could trigger retry logic
+            val nackReceiverObj = object : PebbleKit.PebbleNackReceiver(PEBBLERUN_UUID) {
+                override fun receiveNack(context: Context?, transactionId: Int) {
+                    // Message failed to send - could trigger retry logic
+                }
             }
-            PebbleKit.registerReceivedNackHandler(context, nackReceiver)
+            nackReceiver = PebbleKit.registerReceivedNackHandler(context, nackReceiverObj)
             
             _connectionStateFlow.value = PebbleConnectionState.CONNECTED
             PebbleResult.Success(Unit)
@@ -130,7 +138,7 @@ actual class PebbleTransport(private val context: Context) {
         }
         
         val data = PebbleDictionary().apply {
-            addInt32(PebbleMessageKeys.KEY_COMMAND.toLong(), commandValue)
+            addInt32(PebbleMessageKeys.KEY_COMMAND, commandValue)
         }
         
         return sendMessageWithRetry(data, "workout command")
@@ -151,9 +159,9 @@ actual class PebbleTransport(private val context: Context) {
         }
         
         val pebbleData = PebbleDictionary().apply {
-            addInt32(PebbleMessageKeys.KEY_PACE.toLong(), (data.pace * 100).toInt()) // Send as centiseconds
-            addInt32(PebbleMessageKeys.KEY_DURATION.toLong(), data.duration)
-            addInt32(PebbleMessageKeys.KEY_DISTANCE.toLong(), data.distance.toInt())
+            addInt32(PebbleMessageKeys.KEY_PACE, (data.pace * 100).toInt()) // Send as centiseconds
+            addInt32(PebbleMessageKeys.KEY_DURATION, data.duration)
+            addInt32(PebbleMessageKeys.KEY_DISTANCE, data.distance.toInt())
         }
         
         return sendMessageWithRetry(pebbleData, "workout data")
@@ -174,17 +182,17 @@ actual class PebbleTransport(private val context: Context) {
      */
     actual suspend fun cleanup() {
         messageReceiver?.let {
-            PebbleKit.unregisterReceivedDataHandler(context, it)
+            context.unregisterReceiver(it)
             messageReceiver = null
         }
         
         connectionReceiver?.let {
-            PebbleKit.unregisterReceivedAckHandler(context, it)
+            context.unregisterReceiver(it)
             connectionReceiver = null
         }
         
         nackReceiver?.let {
-            PebbleKit.unregisterReceivedNackHandler(context, it)
+            context.unregisterReceiver(it)
             nackReceiver = null
         }
         
