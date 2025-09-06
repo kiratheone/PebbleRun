@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -20,14 +21,20 @@ kotlin {
     
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":shared:domain"))
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization.json)
         }
         
         androidMain.dependencies {
             implementation(libs.sqldelight.android.driver)
+            // SQLCipher for database encryption
+            implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+            // Android Security library for secure preferences
+            implementation("androidx.security:security-crypto:1.1.0-alpha06")
         }
         
         iosMain.dependencies {
