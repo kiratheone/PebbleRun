@@ -23,8 +23,9 @@ actual class DatabaseDriverFactory(
      * Encryption key is managed by AndroidSecurityManager using Android KeyStore
      */
     private fun createEncryptedDriver(): SqlDriver {
-        val passphrase = securityManager.getDatabaseEncryptionKey()
-        val factory = SupportFactory(passphrase)
+    val passphraseChars = securityManager.getDatabaseEncryptionKey()
+    val passphrase = String(passphraseChars).toByteArray(Charsets.UTF_8)
+    val factory = SupportFactory(passphrase)
         
         return AndroidSqliteDriver(
             schema = WorkoutDatabase.Schema,

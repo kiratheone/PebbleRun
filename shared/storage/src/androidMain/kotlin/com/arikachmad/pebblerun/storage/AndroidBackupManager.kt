@@ -1,10 +1,19 @@
 package com.arikachmad.pebblerun.storage
 
+import android.Manifest
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.BatteryManager
-import androidx.work.*
+import androidx.core.content.ContextCompat
+import androidx.work.Constraints
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ListenableWorker
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -332,15 +341,25 @@ class AndroidBackupManager(
     
     private fun shouldCreateAutoBackup(): Boolean {
         // Check if conditions are met for auto backup
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork
-        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        // Guard connectivity access with ACCESS_NETWORK_STATE permission
+        val hasNetPerm = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_NETWORK_STATE
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        val capabilities = if (hasNetPerm) {
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val network = connectivityManager.activeNetwork
+            connectivityManager.getNetworkCapabilities(network)
+        } else {
+            null
+        }
         
         val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         val batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         
         // Simplified conditions - would be configurable
-        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
+    return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
                 batteryLevel > 20
     }
 }
@@ -353,13 +372,13 @@ class AutoBackupWorker(
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {
     
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): ListenableWorker.Result {
         return try {
             // Create backup manager instance and perform backup
             // This would be injected in a real implementation
-            Result.success()
+            ListenableWorker.Result.success()
         } catch (e: Exception) {
-            Result.retry()
+            ListenableWorker.Result.retry()
         }
     }
 }

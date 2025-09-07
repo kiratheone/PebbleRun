@@ -166,7 +166,7 @@ class AndroidFileSystemManager(private val context: Context) {
                 size = file.length(),
                 lastModified = file.lastModified()
             )
-        }?.sortedByDescending { it.lastModified } ?: emptyList()
+    }?.sortedByDescending { it.lastModified } ?: emptyList()
     }
     
     /**
@@ -189,7 +189,7 @@ class AndroidFileSystemManager(private val context: Context) {
                 lastModified = file.lastModified(),
                 format = format
             )
-        }?.sortedByDescending { it.lastModified } ?: emptyList()
+    }?.sortedByDescending { it.lastModified } ?: emptyList()
     }
     
     /**
@@ -242,7 +242,7 @@ class AndroidFileSystemManager(private val context: Context) {
      */
     private fun cleanupOldBackups(backupDir: File) {
         val backupFiles = backupDir.listFiles()?.filter { it.name.endsWith(".db") }
-            ?.sortedByDescending { it.lastModified } ?: return
+            ?.sortedByDescending { it.lastModified() } ?: return
         
         if (backupFiles.size > MAX_BACKUP_COUNT) {
             backupFiles.drop(MAX_BACKUP_COUNT).forEach { it.delete() }

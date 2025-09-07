@@ -21,7 +21,6 @@ kotlin {
     
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":shared:domain"))
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines)
             implementation(libs.kotlinx.coroutines.core)
@@ -35,6 +34,9 @@ kotlin {
             implementation("net.zetetic:android-database-sqlcipher:4.5.4")
             // Android Security library for secure preferences
             implementation("androidx.security:security-crypto:1.1.0-alpha06")
+            // AndroidX core + WorkManager for scheduled work
+            implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.work.ktx)
         }
         
         iosMain.dependencies {

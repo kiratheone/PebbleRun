@@ -2,7 +2,6 @@ package com.arikachmad.pebblerun.storage
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -42,7 +41,7 @@ class AndroidDataExportManager(
     ): ExportResult = withContext(Dispatchers.IO) {
         try {
             val exportData = WorkoutExportData(
-                exportDate = System.currentTimeMillis(),
+                exportedAt = System.currentTimeMillis(),
                 version = "1.0",
                 sessions = sessions
             )

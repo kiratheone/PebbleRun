@@ -1,10 +1,11 @@
 package com.arikachmad.pebblerun.storage
 
 import android.content.Context
-import androidx.sqlite.db.SupportSQLiteDatabase
 import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlCursor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import app.cash.sqldelight.db.QueryResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
@@ -46,17 +47,13 @@ class AndroidDataMigrationManager(
     override suspend fun getCurrentVersion(): Int = withContext(Dispatchers.IO) {
         try {
             val driver = driverFactory.createDriver()
-            val result = driver.executeQuery(
-                identifier = null,
-                sql = "PRAGMA user_version",
-                parameters = 0
-            )
-            
-            if (result.next()) {
-                result.getLong(0)?.toInt() ?: 0
-            } else {
-                0
-            }
+            var version = 0
+            driver.executeQuery(null, "PRAGMA user_version", { cursor ->
+                val hasRow = (cursor.next() as QueryResult.Value<Boolean>).value
+                if (hasRow) version = ((cursor.getLong(0) as QueryResult.Value<Long?>).value ?: 0L).toInt()
+                QueryResult.Unit
+            }, 0)
+            version
         } catch (e: Exception) {
             0
         }
@@ -109,7 +106,7 @@ class AndroidDataMigrationManager(
                 currentMigration = "Analyzing schema"
             )
             
-            val migrationPath = findMigrationPath(fromVersion, toVersion)
+            val migrationPath = findMigrationPathSync(fromVersion, toVersion)
             if (!migrationPath.isSupported) {
                 return@withContext MigrationResult.Error("Migration path from $fromVersion to $toVersion is not supported")
             }
@@ -199,26 +196,33 @@ class AndroidDataMigrationManager(
             val driver = driverFactory.createDriver()
             
             // Check foreign key constraints
-            val fkResult = driver.executeQuery(null, "PRAGMA foreign_key_check", 0)
-            if (fkResult.next()) {
-                return@withContext ValidationResult.Error("Foreign key constraint violations found")
-            }
+            var fkViolationFound = false
+            driver.executeQuery(null, "PRAGMA foreign_key_check", { cursor ->
+                val hasRow = (cursor.next() as QueryResult.Value<Boolean>).value
+                if (hasRow) fkViolationFound = true
+                QueryResult.Unit
+            }, 0)
+            if (fkViolationFound) return@withContext ValidationResult.Error("Foreign key constraint violations found")
             
             // Check table integrity
-            val integrityResult = driver.executeQuery(null, "PRAGMA integrity_check", 0)
-            if (integrityResult.next()) {
-                val result = integrityResult.getString(0)
-                if (result != "ok") {
-                    return@withContext ValidationResult.Error("Database integrity check failed: $result")
-                }
+            var integrity: String? = null
+            driver.executeQuery(null, "PRAGMA integrity_check", { cursor ->
+                val hasRow = (cursor.next() as QueryResult.Value<Boolean>).value
+                if (hasRow) integrity = (cursor.getString(0) as QueryResult.Value<String?>).value
+                QueryResult.Unit
+            }, 0)
+            if (integrity != null && integrity != "ok") {
+                return@withContext ValidationResult.Error("Database integrity check failed: $integrity")
             }
             
             // Validate critical data exists
-            val sessionCountResult = driver.executeQuery(null, "SELECT COUNT(*) FROM WorkoutSession", 0)
-            if (sessionCountResult.next()) {
-                val count = sessionCountResult.getLong(0) ?: 0
-                // Additional validation logic based on expected data
-            }
+            driver.executeQuery(null, "SELECT COUNT(*) FROM WorkoutSession", { cursor ->
+                val hasRow = (cursor.next() as QueryResult.Value<Boolean>).value
+                if (hasRow) {
+                    /* val count = */ (cursor.getLong(0) as QueryResult.Value<Long?>).value ?: 0L
+                }
+                QueryResult.Unit
+            }, 0)
             
             ValidationResult.Success("Data integrity validation passed")
             
@@ -278,8 +282,10 @@ class AndroidDataMigrationManager(
         }
     }
     
-    private fun findMigrationPath(fromVersion: Int, toVersion: Int): MigrationPath {
-        val availableMigrations = getAvailableMigrations()
+    private fun findMigrationPathSync(fromVersion: Int, toVersion: Int): MigrationPath {
+        val availableMigrations = listOf(
+            MigrationPath(0, 1, listOf("initial_schema"), true, 5000L)
+        )
         return availableMigrations.find { 
             it.fromVersion == fromVersion && it.toVersion == toVersion 
         } ?: MigrationPath(fromVersion, toVersion, emptyList(), false)

@@ -1,6 +1,4 @@
 package com.arikachmad.pebblerun.storage
-
-import com.arikachmad.pebblerun.domain.entity.ValidationResult
 import kotlinx.coroutines.flow.Flow
 
 /**
